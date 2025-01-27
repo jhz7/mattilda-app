@@ -1,6 +1,6 @@
 import os
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
@@ -13,11 +13,12 @@ engine = create_async_engine(
 )
 
 DbSession = async_sessionmaker(engine, class_=AsyncSession, autoflush=True)
-BaseDbo = declarative_base()
+
+
+class BaseSqlModel(DeclarativeBase):
+    pass
 
 
 async def get_db():
     async with DbSession() as session:
-        async with session.begin():
-            yield session
-            await session.close()
+        yield session
