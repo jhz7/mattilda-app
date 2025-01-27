@@ -11,5 +11,18 @@ def NotFoundError(resource: str, attributes: dict):
     copy_attributes["resource"] = resource
 
     return ApplicationError(
-        "ResourceNotFoundError", f"The resource {resource} was not found", copy_attributes
+        "ResourceNotFoundError",
+        f"The resource {resource} was not found",
+        copy_attributes,
+    )
+
+
+def AlreadyExistsError(resource: str, attributes: dict):
+    copy_attributes = attributes.copy()
+    copy_attributes["resource"] = resource
+
+    return ApplicationError(
+        "ResourceAlreadyExistsError",
+        f"The resource {resource} already exists",
+        copy_attributes,
     )

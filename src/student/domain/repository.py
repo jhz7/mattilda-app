@@ -29,6 +29,10 @@ class StudentRepository(ABC):
         return found_student
 
     @abstractmethod
+    async def exists(self, query: Query) -> bool:
+        pass
+
+    @abstractmethod
     async def find(self, query: Query) -> Student | None:
         pass
 
@@ -38,4 +42,8 @@ class StudentRepository(ABC):
 
     @abstractmethod
     async def add(self, student: NewStudent) -> Student:
+        pass
+    
+    @abstractmethod
+    async def update(self, student: Student) -> Student:
         pass
