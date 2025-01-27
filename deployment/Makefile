@@ -11,5 +11,5 @@ logs.cache:
 	docker-compose logs -f cache
 
 run.migrations:
-	docker-compose exec app-server alembic revision --autogenerate -m "general migration"
+	docker-compose exec app-server alembic revision --autogenerate -m "migration"
 	docker-compose exec app-server alembic upgrade head

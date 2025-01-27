@@ -29,6 +29,7 @@ async def create_student(request: StudentDto, db: AsyncSession = Depends(get_db)
     )
 
     db.add(student_dbo)
-    await db.refresh()
+    await db.commit()
+    await db.refresh(student_dbo)
 
     return student_dbo

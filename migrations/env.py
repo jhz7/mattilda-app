@@ -35,6 +35,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
+from src.shared.contact.model import ContactDbo
+
 target_metadata = BaseSqlModel.metadata
 
 print("Metadata tables:", target_metadata.tables.keys())
