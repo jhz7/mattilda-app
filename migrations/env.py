@@ -36,6 +36,7 @@ if config.config_file_name is not None:
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 from src.shared.contact.model import ContactDbo
 from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
+from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import EnrollmentDbo
 from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
 
 target_metadata = BaseSqlModel.metadata

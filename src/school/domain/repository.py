@@ -19,6 +19,11 @@ class ById(SchoolQuery):
 
 
 @dataclass
+class ByIdAndActive(SchoolQuery):
+    id: str
+
+
+@dataclass
 class ByEmail(SchoolQuery):
     email: str
 

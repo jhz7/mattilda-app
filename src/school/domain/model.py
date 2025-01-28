@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from src.school.domain.errors import InvalidStatusError
+from src.school.domain.errors import InvalidSchoolStatusError
 from src.shared.contact.model import Contact
 
 
@@ -31,10 +31,13 @@ class School:
         )
 
     def deactivate(self, at: datetime = datetime.now()) -> "School":
-        if SchoolStatus.ACTIVE != self.status:
-            raise InvalidStatusError(school_id=self.id)
+        if not self.is_active():
+            raise InvalidSchoolStatusError(school_id=self.id)
 
         self.status = SchoolStatus.INACTIVE
         self.updated_at = at
 
         return self
+
+    def is_active(self) -> bool:
+        return self.status == SchoolStatus.ACTIVE

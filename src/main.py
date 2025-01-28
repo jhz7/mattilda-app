@@ -56,5 +56,5 @@ async def exception_handler(request: Request, error: BusinessError):
     )
 
 
-app.include_router(student_router, prefix="/mattilda")
-app.include_router(school_router, prefix="/mattilda")
+app.include_router(student_router, tags=["Students"], prefix="/mattilda")
+app.include_router(school_router, tags=["Schools"], prefix="/mattilda")

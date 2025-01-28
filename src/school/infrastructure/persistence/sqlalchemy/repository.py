@@ -8,6 +8,7 @@ from src.shared.db.pg_sqlalchemy.connection import get_db
 from src.shared.logging.log import Logger
 from src.shared.errors.technical import TechnicalError
 from src.school.domain.repository import (
+    ByIdAndActive,
     SchoolRepository,
     ById,
     ByEmail,
@@ -16,7 +17,7 @@ from src.school.domain.repository import (
     SchoolsQuery,
 )
 from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
-from src.school.domain.model import School
+from src.school.domain.model import School, SchoolStatus
 from sqlalchemy.dialects.postgresql import insert
 
 logger = Logger(__name__)
@@ -120,8 +121,11 @@ class SqlAlchemySchoolRepository(SchoolRepository):
         match query:
             case ById(id):
                 return SchoolDbo.id == id
+            case ByIdAndActive(id):
+                return (SchoolDbo.id == id) & (
+                    SchoolDbo.status == SchoolStatus.ACTIVE.name
+                )
             case ByEmail(email):
-                # SchoolDbo.contact.has(ContactDbo.email == email)
                 contact_alias = aliased(ContactDbo)
                 return (
                     SchoolDbo.contact_id == contact_alias.id

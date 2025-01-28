@@ -34,13 +34,16 @@ class Student:
     updated_at: datetime
 
     def deactivate(self, at: datetime = datetime.now()) -> "Student":
-        if StudentStatus.ACTIVE != self.status:
+        if not self.is_active():
             raise InvalidStatusError(student_id=self.id)
 
         self.status = StudentStatus.INACTIVE
         self.updated_at = at
 
         return self
+
+    def is_active(self) -> bool:
+        return StudentStatus.ACTIVE == self.status
 
     @staticmethod
     def of(

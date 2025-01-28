@@ -1,5 +1,13 @@
 from fastapi import APIRouter, Depends
 
+from src.school.application.use_cases.enroll_student_to_school import (
+    EnrollStudentToSchool,
+    Request as EnrollStudentToSchoolRequest,
+)
+from src.school.domain.enrollment import EnrollmentRepository
+from src.school.infrastructure.persistence.sqlalchemy.enrolment_repository import (
+    get_enrollment_repository,
+)
 from src.school.domain.model import SchoolStatus
 from src.shared.id.generator import IdGenerator
 from src.shared.id.ulid_generator import get_id_generator
@@ -17,7 +25,15 @@ from src.school.application.use_cases.update_school import (
     UpdateSchool,
     Request as UpdateSchoolRequest,
 )
-from src.school.infrastructure.api.http.dto import CreateSchoolDto, UpdateSchoolDto
+from src.school.infrastructure.api.http.dto import (
+    CreateSchoolDto,
+    EnrollStudentToSchoolDto,
+    UpdateSchoolDto,
+)
+from src.student.domain.repository import StudentRepository
+from src.student.infrastructure.persistence.sqlalchemy.repository import (
+    get_student_repository,
+)
 
 
 router = APIRouter()
@@ -49,6 +65,18 @@ def get_school_query_handler(
     return SchoolQueryHandler(schools=schools_repository)
 
 
+def get_enroll_student_to_school_use_case(
+    schools_repository: SchoolRepository = Depends(get_school_repository),
+    students_repository: StudentRepository = Depends(get_student_repository),
+    enrollment_repository: EnrollmentRepository = Depends(get_enrollment_repository),
+) -> SchoolQueryHandler:
+    return EnrollStudentToSchool(
+        schools=schools_repository,
+        enrollments=enrollment_repository,
+        students=students_repository,
+    )
+
+
 @router.post("/schools")
 async def create_school(
     dto: CreateSchoolDto,
@@ -64,6 +92,23 @@ async def create_school(
     registered_school = await use_case.execute(request)
 
     return registered_school
+
+
+@router.post("/schools/{id}/enrollments/")
+async def create_enrollment(
+    id: str,
+    dto: EnrollStudentToSchoolDto,
+    use_case: EnrollStudentToSchool = Depends(get_enroll_student_to_school_use_case),
+):
+    request = EnrollStudentToSchoolRequest(
+        school_id=id,
+        student_id=dto.student_id,
+        monthly_fee=dto.monthly_fee,
+    )
+
+    enrollment = await use_case.execute(request)
+
+    return enrollment
 
 
 @router.delete("/schools/{id}")
