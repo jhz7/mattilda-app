@@ -13,9 +13,6 @@ from src.invoice.domain.events import (
     InvoiceCreated,
     InvoiceCancelled,
     InvoicePaid,
-    PaymentAdded,
-    PaymentFailed,
-    PaymentSucceed,
 )
 
 
@@ -89,6 +86,25 @@ class Payment:
 
     def is_pending(self) -> bool:
         return PaymentStatus.PENDING == self.status
+
+
+class PaymentAdded(InvoiceEvent):
+    id: str
+    payment: Payment
+    at: datetime
+
+
+class PaymentSucceed(InvoiceEvent):
+    id: str
+    due_amount: Decimal
+    payment: Payment
+    at: datetime
+
+
+class PaymentFailed(InvoiceEvent):
+    id: str
+    payment_id: str
+    at: datetime
 
 
 @dataclass(frozen=True)

@@ -12,7 +12,7 @@ def InvalidEnrollmentError(school_id: str, student_id: str) -> BusinessError:
 def InvalidEnrollmentError(school_id: str, student_id: str) -> BusinessError:
     return BusinessError(
         code="InvalidEnrollmentError",
-        message=f"EnrollmentDeletedError",
+        message=f"Some of the parties for the enrollment are not active",
         attributes={"school_id": school_id, "student_id": student_id},
     )
 

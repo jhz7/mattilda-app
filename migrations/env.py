@@ -38,6 +38,7 @@ from src.shared.contact.model import ContactDbo
 from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
 from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import EnrollmentDbo
 from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
+from src.invoice.infrastructure.persistence.sqlalchemy.dbo import PaymentDbo, InvoiceDbo
 
 target_metadata = BaseSqlModel.metadata
 
