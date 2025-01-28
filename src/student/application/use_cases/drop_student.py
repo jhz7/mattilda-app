@@ -11,6 +11,8 @@ class DropStudent:
         self.student_repository = student_repository
 
     async def execute(self, student_id: str) -> Student:
+        logger.info(f"About to drop a student: id={student_id}")
+
         query = ById(id=student_id)
         student = await self.student_repository.get(query=query)
 
