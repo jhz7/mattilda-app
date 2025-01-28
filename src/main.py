@@ -6,6 +6,7 @@ from src.shared.errors.application import ApplicationError
 from src.shared.errors.technical import TechnicalError
 from src.student.infrastructure.api.http.route import router as student_router
 from src.school.infrastructure.api.http.route import router as school_router
+from src.invoice.infrastructure.api.http.route import router as invoice_router
 
 load_dotenv()
 
@@ -58,3 +59,4 @@ async def exception_handler(request: Request, error: BusinessError):
 
 app.include_router(student_router, tags=["Students"], prefix="/mattilda")
 app.include_router(school_router, tags=["Schools"], prefix="/mattilda")
+app.include_router(invoice_router, tags=["Invoices"], prefix="/mattilda")

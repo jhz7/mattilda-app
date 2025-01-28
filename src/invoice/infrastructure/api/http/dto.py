@@ -1,20 +1,35 @@
+from datetime import date
+from decimal import Decimal
 from pydantic import BaseModel
 
-from src.shared.contact.model import ContactDto, PartialContactDto
-from src.student.domain.model import IdentityKind
+from src.invoice.application.use_cases.create_invoice import (
+    Request as CreateInvoiceRequest,
+)
+from src.invoice.application.use_cases.add_invoice_payment import (
+    Request as AddInvoicePaymentRequest,
+)
 
 
-class CreateStudentDto(BaseModel):
-    first_name: str
-    last_name: str
-    age: int
-    identity_kind: IdentityKind
-    identity_code: str
-    contact: ContactDto
+class CreateInvoiceDto(BaseModel):
+    school_id: str
+    student_id: str
+    amount: Decimal
+    due_date: date
+
+    def as_create_invoice_request(self) -> CreateInvoiceRequest:
+        return CreateInvoiceRequest(
+            school_id=self.school_id,
+            student_id=self.student_id,
+            amount=self.amount,
+            due_date=self.due_date,
+        )
 
 
-class UpdateStudentDto(BaseModel):
-    first_name: str | None
-    last_name: str | None
-    age: int | None
-    contact: PartialContactDto | None
+class AddInvoicePaymentDto(BaseModel):
+    amount: Decimal
+
+    def as_add_invoice_payment_request(self, invoice_id: str) -> AddInvoicePaymentRequest:
+        return AddInvoicePaymentRequest(
+            id=invoice_id,
+            amount=self.amount,
+        )

@@ -1,4 +1,9 @@
-from src.invoice.domain.repository import InvoiceRepository, InvoiceQuery, InvoicesQuery
+from src.invoice.domain.repository import (
+    AccountStatement,
+    InvoiceRepository,
+    InvoiceQuery,
+    InvoicesQuery,
+)
 from src.invoice.domain.model import Invoice
 
 
@@ -14,3 +19,6 @@ class InvoiceQueryHandler:
 
     async def list(self, query: InvoicesQuery) -> list[Invoice]:
         return await self.invoices.list(query)
+
+    async def account_statement(self, query: InvoicesQuery) -> AccountStatement:
+        return await self.invoices.account_statement(query)

@@ -8,8 +8,15 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from invoice.domain.events import InvoiceCreated
-from src.invoice.domain.model import InvoiceStatus, PaymentAdded, PaymentStatus
+from src.invoice.domain.repository import PendingInvoiceReadProjection
+from src.invoice.domain.events import InvoiceCreated
+from src.invoice.domain.model import (
+    Invoice,
+    InvoiceStatus,
+    Payment,
+    PaymentAdded,
+    PaymentStatus,
+)
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 
 
@@ -40,6 +47,18 @@ class PaymentDbo(BaseSqlModel):
             updated_at=event.payment.updated_at,
         )
 
+    def as_domain(self) -> Payment:
+        return Payment(
+            id=self.id,
+            invoice_id=self.invoice_id,
+            amount=self.amount,
+            status=PaymentStatus(self.status),
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+            failed_at=self.failed_at,
+            succeed_at=self.succeed_at,
+        )
+
 
 class InvoiceDbo(BaseSqlModel):
     __tablename__ = "invoices"
@@ -58,7 +77,7 @@ class InvoiceDbo(BaseSqlModel):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     payments: Mapped[list[PaymentDbo]] = relationship(
-        "PaymentDbo", backref="invoice", lazy="joined"
+        "PaymentDbo", backref="invoice", lazy="noload"
     )
 
     def __repr__(self):
@@ -76,4 +95,31 @@ class InvoiceDbo(BaseSqlModel):
             status=InvoiceStatus.PENDING.name,
             created_at=event.at,
             updated_at=event.at,
+        )
+
+    def as_domain(self) -> Invoice:
+        return Invoice(
+            id=self.id,
+            student_id=self.student_id,
+            school_id=self.school_id,
+            initial_amount=self.initial_amount,
+            due_amount=self.due_amount,
+            due_date=self.due_date,
+            status=InvoiceStatus(self.status),
+            payments=[payment.as_domain() for payment in self.payments],
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+            paid_at=self.paid_at,
+            cancelled_at=self.cancelled_at,
+        )
+
+    def as_read_projection(self) -> PendingInvoiceReadProjection:
+        return PendingInvoiceReadProjection(
+            id=self.id,
+            student_id=self.student_id,
+            school_id=self.school_id,
+            base_amount=self.initial_amount,
+            due_amount=self.due_amount,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
         )

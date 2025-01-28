@@ -1,5 +1,6 @@
 from dataclasses import asdict
 from fastapi import Depends
+from sqlalchemy.orm import subqueryload
 from sqlalchemy import select, exists, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.invoice.domain.events import (
@@ -12,6 +13,8 @@ from src.shared.db.pg_sqlalchemy.connection import get_db
 from src.shared.logging.log import Logger
 from src.shared.errors.technical import TechnicalError
 from src.invoice.domain.repository import (
+    AccountStatement,
+    All,
     ById,
     BySchoolId,
     ByStudentId,
@@ -60,7 +63,9 @@ class SqlAlchemyInvoiceRepository(InvoiceRepository):
     async def find(self, query: InvoiceQuery) -> Invoice | None:
         try:
             db_query = select(InvoiceDbo).where(self.__parse_single_query(query))
-            result = await self.session.execute(db_query)
+            result = await self.session.execute(
+                db_query.options(subqueryload(InvoiceDbo.payments))
+            )
             result = result.scalar()
 
             if result is None:
@@ -79,10 +84,37 @@ class SqlAlchemyInvoiceRepository(InvoiceRepository):
 
             raise error from e
 
+    async def account_statement(self, query: InvoicesQuery) -> AccountStatement:
+        try:
+            db_query = select(InvoiceDbo).filter(
+                self.__parse_multiple_query(query),
+                InvoiceDbo.status == InvoiceStatus.PENDING.name,
+            )
+            result = await self.session.execute(
+                db_query.order_by(InvoiceDbo.created_at.desc())
+            )
+            result = result.scalars().all()
+
+            invoices = list(map(lambda dbo: dbo.as_read_projection(), result))
+
+            return AccountStatement.of(invoices)
+        except Exception as e:
+            error = TechnicalError(
+                code="InvoiceRepositoryError",
+                message=f"Fail listing invoices for account_statement query={(str(query))}",
+                attributes=asdict(query),
+                cause=e,
+            )
+
+            logger.error(error)
+
+            raise error from e
+
     async def list(self, query: InvoicesQuery) -> list[Invoice]:
         try:
+            db_query = select(InvoiceDbo).where(self.__parse_multiple_query(query))
             result = await self.session.execute(
-                select(InvoiceDbo).where(self.__parse_multiple_query(query))
+                db_query.order_by(InvoiceDbo.created_at.desc())
             )
             result = result.scalars().all()
 
@@ -193,6 +225,8 @@ class SqlAlchemyInvoiceRepository(InvoiceRepository):
                 return InvoiceDbo.school_id == student_id
             case ByStudentId(student_id):
                 return InvoiceDbo.student_id == student_id
+            case All():
+                return not InvoiceDbo.id.is_(None)
             case _:
                 raise NotImplementedError("Query not implemented")
 

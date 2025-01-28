@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
+from datetime import datetime
+from decimal import Decimal
 
 from src.invoice.domain.events import InvoiceEvent
 from src.invoice.domain.model import Invoice
@@ -29,6 +31,34 @@ class ByStudentId(InvoicesQuery):
     student_id: str
 
 
+@dataclass
+class All(InvoicesQuery):
+    token: str
+
+
+@dataclass
+class PendingInvoiceReadProjection:
+    id: str
+    student_id: str
+    school_id: str
+    base_amount: Decimal
+    due_amount: Decimal
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class AccountStatement:
+    due_amount: Decimal
+    invoices: list[PendingInvoiceReadProjection]
+
+    @staticmethod
+    def of(invoices: list[PendingInvoiceReadProjection]) -> "AccountStatement":
+        due_amount = sum(invoice.due_amount for invoice in invoices)
+
+        return AccountStatement(due_amount=due_amount, invoices=invoices)
+
+
 class InvoiceRepository(ABC):
     async def get(self, query: InvoiceQuery) -> Invoice:
         found_invoice = await self.find(query)
@@ -48,6 +78,10 @@ class InvoiceRepository(ABC):
 
     @abstractmethod
     async def list(self, query: InvoicesQuery) -> list[Invoice]:
+        pass
+
+    @abstractmethod
+    async def account_statement(self, query: InvoicesQuery) -> AccountStatement:
         pass
 
     @abstractmethod

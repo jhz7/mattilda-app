@@ -88,12 +88,14 @@ class Payment:
         return PaymentStatus.PENDING == self.status
 
 
+@dataclass(frozen=True)
 class PaymentAdded(InvoiceEvent):
     id: str
     payment: Payment
     at: datetime
 
 
+@dataclass(frozen=True)
 class PaymentSucceed(InvoiceEvent):
     id: str
     due_amount: Decimal
@@ -101,6 +103,7 @@ class PaymentSucceed(InvoiceEvent):
     at: datetime
 
 
+@dataclass(frozen=True)
 class PaymentFailed(InvoiceEvent):
     id: str
     payment_id: str
@@ -124,7 +127,7 @@ class Invoice:
 
     @staticmethod
     def build_id(school_id: str, student_id: str, due_date: date) -> str:
-        return f"school:{school_id}/student:{student_id}/period:{due_date.year}-{due_date.month}"
+        return f"school:{school_id}|student:{student_id}|period:{due_date.year}-{due_date.month}"
 
     @staticmethod
     def of(
