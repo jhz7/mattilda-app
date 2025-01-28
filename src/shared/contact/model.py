@@ -13,6 +13,12 @@ class ContactDto(BaseModel):
     address: Annotated[str, Field(min_length=5, max_length=255)]
 
 
+class PartialContactDto(BaseModel):
+    email: str | None
+    phone: str | None
+    address: str | None
+
+
 @dataclass
 class Contact:
     id: str

@@ -7,14 +7,14 @@ logger = Logger(__name__)
 
 
 class DropStudent:
-    def __init__(self, student_repository: StudentRepository):
-        self.student_repository = student_repository
+    def __init__(self, students: StudentRepository):
+        self.students = students
 
     async def execute(self, student_id: str) -> Student:
         logger.info(f"About to drop a student: id={student_id}")
 
         query = ById(id=student_id)
-        student = await self.student_repository.get(query=query)
+        student = await self.students.get(query=query)
 
         try:
             dropped_student = student.deactivate()
@@ -22,6 +22,6 @@ class DropStudent:
             logger.error(error)
             raise error
 
-        await self.student_repository.save(student=dropped_student)
+        await self.students.save(student=dropped_student)
 
         return dropped_student

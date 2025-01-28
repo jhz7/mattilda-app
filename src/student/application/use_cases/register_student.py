@@ -22,17 +22,15 @@ class Request:
 
 
 class RegisterStudent:
-    def __init__(
-        self, student_repository: StudentRepository, id_generator: IdGenerator
-    ):
+    def __init__(self, students: StudentRepository, id_generator: IdGenerator):
         self.id_generator = id_generator
-        self.student_repository = student_repository
+        self.students = students
 
     async def execute(self, request: Request) -> Student:
         logger.info(f"About to register student: identity={asdict(request.identity)}")
 
         query = ByIdentity(identity=request.identity)
-        exists_student = await self.student_repository.exists(query=query)
+        exists_student = await self.students.exists(query=query)
 
         if exists_student:
             error = AlreadyExistsError(resource="Student", attributes=asdict(request))
@@ -58,6 +56,6 @@ class RegisterStudent:
             first_name=request.first_name,
         )
 
-        registered_student = await self.student_repository.save(new_student)
+        registered_student = await self.students.save(new_student)
 
         return registered_student

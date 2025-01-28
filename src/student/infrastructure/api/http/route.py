@@ -27,30 +27,26 @@ def get_register_student_use_case(
     id_generator: IdGenerator = Depends(get_id_generator),
     student_repository: StudentRepository = Depends(get_student_repository),
 ) -> RegisterStudent:
-    return RegisterStudent(
-        student_repository=student_repository, id_generator=id_generator
-    )
+    return RegisterStudent(students=student_repository, id_generator=id_generator)
 
 
 def get_drop_student_use_case(
     student_repository: StudentRepository = Depends(get_student_repository),
 ) -> RegisterStudent:
-    return DropStudent(student_repository=student_repository)
+    return DropStudent(students=student_repository)
 
 
 def get_update_student_use_case(
     id_generator: IdGenerator = Depends(get_id_generator),
     student_repository: StudentRepository = Depends(get_student_repository),
 ) -> RegisterStudent:
-    return UpdateStudent(
-        student_repository=student_repository, id_generator=id_generator
-    )
+    return UpdateStudent(students=student_repository, id_generator=id_generator)
 
 
 def get_student_query_handler(
     student_repository: StudentRepository = Depends(get_student_repository),
 ) -> StudentQueryHandler:
-    return StudentQueryHandler(student_repository=student_repository)
+    return StudentQueryHandler(students=student_repository)
 
 
 @router.post("/students")

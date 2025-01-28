@@ -21,17 +21,15 @@ class Request:
 
 
 class UpdateStudent:
-    def __init__(
-        self, student_repository: StudentRepository, id_generator: IdGenerator
-    ):
+    def __init__(self, students: StudentRepository, id_generator: IdGenerator):
         self.id_generator = id_generator
-        self.student_repository = student_repository
+        self.students = students
 
     async def execute(self, request: Request) -> Student:
         logger.info(f"About to update a student: request={asdict(request)}")
 
         query = ById(id=request.id)
-        student = await self.student_repository.get(query=query)
+        student = await self.students.get(query=query)
 
         if request.first_name is not None:
             student.first_name = request.first_name
@@ -47,7 +45,7 @@ class UpdateStudent:
         if contact is not None:
             student.contact = contact
 
-        updated_student = await self.student_repository.save(student)
+        updated_student = await self.students.save(student)
 
         return updated_student
 
