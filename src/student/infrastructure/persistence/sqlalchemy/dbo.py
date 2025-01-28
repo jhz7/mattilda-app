@@ -3,7 +3,7 @@ from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.shared.contact.model import ContactDbo
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
-from src.student.domain.model import Student, StudentStatus
+from src.student.domain.model import Identity, Student, StudentStatus
 
 
 class StudentDbo(BaseSqlModel):
@@ -42,4 +42,17 @@ class StudentDbo(BaseSqlModel):
             contact_id=student.contact.id,
             created_at=at,
             updated_at=at,
+        )
+
+    def as_domain(self) -> Student:
+        return Student(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            identity=Identity(kind=self.identity_kind, code=self.identity_code),
+            age=self.age,
+            status=StudentStatus(self.status),
+            contact=self.contact.as_domain(),
+            created_at=self.created_at,
+            updated_at=self.updated_at,
         )

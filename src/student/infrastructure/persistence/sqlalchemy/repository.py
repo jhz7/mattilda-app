@@ -37,15 +37,15 @@ class SqlAlchemyStudentRepository(StudentRepository):
 
     async def find(self, query: Query) -> Student | None:
         try:
-            db_query = self.__parse_query(query)
+            db_query = select(StudentDbo).where(self.__parse_query(query))
             result = await self.session.execute(db_query)
-            r = result.scalar()
-            logger.info(r)
+            result = result.scalar()
+            logger.info(result)
 
-            if r is None:
+            if result is None:
                 return None
 
-            return r.all()
+            return result.as_domain()
         except Exception as e:
             error = TechnicalError(
                 code="StudentRepositoryError",
@@ -58,8 +58,23 @@ class SqlAlchemyStudentRepository(StudentRepository):
 
             raise error from e
 
-    async def list(self):
-        return self.session.query(self.model).all()
+    async def list(self) -> list[Student]:
+        try:
+            result = await self.session.execute(select(StudentDbo))
+            result = result.scalars().all()
+
+            return list(map(lambda student_dbo: student_dbo.as_domain(), result))
+        except Exception as e:
+            error = TechnicalError(
+                code="StudentRepositoryError",
+                message=f"Fail listing students ",
+                attributes={},
+                cause=e,
+            )
+
+            logger.error(error)
+
+            raise error from e
 
     async def add(self, student: Student) -> Student:
         try:
