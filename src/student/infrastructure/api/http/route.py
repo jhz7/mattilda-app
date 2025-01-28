@@ -77,9 +77,9 @@ async def delete_student(
     id: str,
     use_case: DropStudent = Depends(get_drop_student_use_case),
 ):
-    registered_student = await use_case.execute(student_id=id)
+    dropped_student = await use_case.execute(student_id=id)
 
-    return registered_student
+    return dropped_student
 
 
 @router.patch("/students/{id}")

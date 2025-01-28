@@ -34,8 +34,9 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
-from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
 from src.shared.contact.model import ContactDbo
+from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
+from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
 
 target_metadata = BaseSqlModel.metadata
 

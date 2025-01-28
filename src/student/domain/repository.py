@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 
 from src.shared.errors.application import NotFoundError
-from src.student.domain.model import Identity, Student, Student
+from src.student.domain.model import Identity, Student
 
 
 class Query(ABC):

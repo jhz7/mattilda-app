@@ -29,9 +29,9 @@ class Student:
     age: int
     contact: Contact
     identity: Identity
+    status: StudentStatus
     created_at: datetime
     updated_at: datetime
-    status: StudentStatus
 
     def deactivate(self, at: datetime = datetime.now()) -> "Student":
         if StudentStatus.ACTIVE != self.status:
