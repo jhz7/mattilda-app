@@ -41,9 +41,5 @@ class StudentRepository(ABC):
         pass
 
     @abstractmethod
-    async def add(self, student: Student) -> Student:
-        pass
-
-    @abstractmethod
-    async def update(self, student: Student) -> Student:
+    async def save(self, student: Student) -> Student:
         pass

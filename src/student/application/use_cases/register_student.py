@@ -58,6 +58,6 @@ class RegisterStudent:
             first_name=request.first_name,
         )
 
-        registered_student = await self.student_repository.add(new_student)
+        registered_student = await self.student_repository.save(new_student)
 
         return registered_student

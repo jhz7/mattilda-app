@@ -1,4 +1,4 @@
-from shared.errors.business import BusinessError
+from src.shared.errors.business import BusinessError
 from src.shared.logging.log import Logger
 from src.student.domain.repository import ById, StudentRepository
 from src.student.domain.model import Student
@@ -11,7 +11,7 @@ class DropStudent:
         self.student_repository = student_repository
 
     async def execute(self, student_id: str) -> Student:
-        query = ById(id == student_id)
+        query = ById(id=student_id)
         student = await self.student_repository.get(query=query)
 
         try:
@@ -20,6 +20,6 @@ class DropStudent:
             logger.error(error)
             raise error
 
-        await self.student_repository.update(student=dropped_student)
+        await self.student_repository.save(student=dropped_student)
 
         return dropped_student

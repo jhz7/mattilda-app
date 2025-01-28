@@ -11,6 +11,7 @@ from src.student.infrastructure.persistence.sqlalchemy.repository import (
 from src.student.application.use_cases.register_student import RegisterStudent, Request
 from src.student.domain.model import Identity, IdentityKind
 from src.student.application.use_cases.student_query_handler import StudentQueryHandler
+from src.student.application.use_cases.drop_student import DropStudent
 
 
 router = APIRouter()
@@ -23,6 +24,12 @@ def get_register_student_use_case(
     return RegisterStudent(
         student_repository=student_repository, id_generator=id_generator
     )
+
+
+def get_drop_student_use_case(
+    student_repository: StudentRepository = Depends(get_student_repository),
+) -> RegisterStudent:
+    return DropStudent(student_repository=student_repository)
 
 
 def get_student_query_handler(
@@ -59,9 +66,19 @@ async def create_student(
     return registered_student
 
 
+@router.delete("/students/{id}")
+async def delete_student(
+    id: str,
+    use_case: DropStudent = Depends(get_drop_student_use_case),
+):
+    registered_student = await use_case.execute(student_id=id)
+
+    return registered_student
+
+
 @router.get("/students/{id}")
 async def get_student(
-    id,
+    id: str,
     query_handler: StudentQueryHandler = Depends(get_student_query_handler),
 ):
     student = await query_handler.get(query=ById(id=id))

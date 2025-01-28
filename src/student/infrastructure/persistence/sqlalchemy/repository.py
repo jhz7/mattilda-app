@@ -2,7 +2,7 @@ from dataclasses import asdict
 from fastapi import Depends
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.shared.contact.model import ContactDbo
+from src.shared.contact.model import Contact, ContactDbo
 from src.shared.db.pg_sqlalchemy.connection import get_db
 from src.shared.logging.log import Logger
 from src.shared.errors.technical import TechnicalError
@@ -40,7 +40,6 @@ class SqlAlchemyStudentRepository(StudentRepository):
             db_query = select(StudentDbo).where(self.__parse_query(query))
             result = await self.session.execute(db_query)
             result = result.scalar()
-            logger.info(result)
 
             if result is None:
                 return None
@@ -76,33 +75,30 @@ class SqlAlchemyStudentRepository(StudentRepository):
 
             raise error from e
 
-    async def add(self, student: Student) -> Student:
+    async def save(self, student: Student) -> Student:
         try:
-            contact_dbo = ContactDbo.from_domain(student.contact)
-            contact_statement = (
-                insert(ContactDbo)
-                .values(**contact_dbo.as_dict())
-                .on_conflict_do_nothing()
-            )
+            existing_contact_id = await self.__get_or_create_contact(student.contact)
 
-            await self.session.execute(contact_statement)
-            await self.session.commit()
-
-            existing_contact_id = await self.session.execute(
-                select(ContactDbo.id).filter_by(email=student.contact.email)
-            )
-            existing_contact_id = existing_contact_id.scalar_one_or_none()
             student_dbo = StudentDbo.from_domain(student)
             student_dbo.contact_id = existing_contact_id
 
-            self.session.add(student_dbo)
+            upsert_student_statement = (
+                insert(StudentDbo)
+                .values(**student_dbo.as_dict())
+                .on_conflict_do_update(
+                    index_elements=["id"],
+                    set_={**student_dbo.as_for_update_dict()},
+                )
+            )
+
+            await self.session.execute(upsert_student_statement)
             await self.session.commit()
 
             return student
         except Exception as e:
             error = TechnicalError(
                 code="StudentRepositoryError",
-                message="Fail adding a student",
+                message=f"Fail saving a student {student.id}",
                 attributes=asdict(student),
                 cause=e,
             )
@@ -110,11 +106,6 @@ class SqlAlchemyStudentRepository(StudentRepository):
             logger.error(error)
 
             raise error from e
-
-    async def update(self, student):
-        self.session.add(student)
-        self.session.commit()
-        return student
 
     def __parse_query(self, query):
         match query:
@@ -124,6 +115,22 @@ class SqlAlchemyStudentRepository(StudentRepository):
                 return (StudentDbo.identity_kind == identity.kind.name) & (
                     StudentDbo.identity_code == identity.code
                 )
+
+    async def __get_or_create_contact(self, contact: Contact) -> str:
+        contact_dbo = ContactDbo.from_domain(contact)
+        contact_statement = (
+            insert(ContactDbo).values(**contact_dbo.as_dict()).on_conflict_do_nothing()
+        )
+
+        await self.session.execute(contact_statement)
+        await self.session.commit()
+
+        existing_contact_id = await self.session.execute(
+            select(ContactDbo.id).filter_by(email=contact.email)
+        )
+        existing_contact_id = existing_contact_id.scalar_one_or_none()
+
+        return existing_contact_id
 
 
 def get_student_repository(
