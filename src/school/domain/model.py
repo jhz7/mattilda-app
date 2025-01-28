@@ -32,7 +32,7 @@ class School:
 
     def deactivate(self, at: datetime = datetime.now()) -> "School":
         if SchoolStatus.ACTIVE != self.status:
-            raise InvalidStatusError(student_id=self.id)
+            raise InvalidStatusError(school_id=self.id)
 
         self.status = SchoolStatus.INACTIVE
         self.updated_at = at

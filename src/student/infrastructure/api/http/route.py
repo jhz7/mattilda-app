@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.shared.id.generator import IdGenerator
 from src.shared.id.ulid_generator import get_id_generator
