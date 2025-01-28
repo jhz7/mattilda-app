@@ -107,6 +107,10 @@ class Invoice:
     cancelled_at: datetime | None = None
 
     @staticmethod
+    def build_id(school_id: str, student_id: str, due_date: date) -> str:
+        return f"school:{school_id}/student:{student_id}/period:{due_date.year}-{due_date.month}"
+
+    @staticmethod
     def of(
         student_id: str,
         school_id: str,
@@ -115,7 +119,7 @@ class Invoice:
         at: datetime = datetime.now(),
     ) -> tuple[InvoiceEvent, "Invoice"]:
         invoice = Invoice(
-            id=f"school:{school_id}/student:{school_id}/period:{due_date.year}-{due_date.month}",
+            id=Invoice.build_id(school_id, student_id, due_date),
             school_id=school_id,
             student_id=student_id,
             initial_amount=amount,

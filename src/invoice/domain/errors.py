@@ -25,6 +25,14 @@ def PaymentNotFoundError(invoice_id: str, payment_id: str) -> BusinessError:
     )
 
 
+def InvalidInvoicePartiesError(school_id: str, student_id: str) -> BusinessError:
+    return BusinessError(
+        code="InvalidInvoicePartiesError",
+        message=f"Some of the parties for the invoice are not active",
+        attributes={"school_id": school_id, "student_id": student_id},
+    )
+
+
 def InvalidPaymentAmountError(invoice_id: str, payment_id: str) -> BusinessError:
     return BusinessError(
         code="InvalidPaymentAmountError",
