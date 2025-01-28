@@ -1,7 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.shared.contact.model import ContactDbo
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
+from src.student.domain.model import Student, StudentStatus
 
 
 class StudentDbo(BaseSqlModel):
@@ -17,6 +19,27 @@ class StudentDbo(BaseSqlModel):
     created_at: Mapped[datetime] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column()
 
+    # Foreign Key linking to ContactDbo
+    contact_id: Mapped[str] = mapped_column(ForeignKey("contacts.id"), unique=True)
+
+    # Relationship to ContactDbo
+    contact: Mapped[ContactDbo] = relationship("ContactDbo", lazy="joined")
+
     __table_args__ = (
         UniqueConstraint("identity_kind", "identity_code", name="uq_identity_idx"),
     )
+
+    @staticmethod
+    def from_domain(student: Student, at: datetime = datetime.now()) -> "StudentDbo":
+        return StudentDbo(
+            id=student.id,
+            first_name=student.first_name,
+            last_name=student.last_name,
+            identity_kind=student.identity.kind.name,
+            identity_code=student.identity.code,
+            age=student.age,
+            status=StudentStatus.ACTIVE.value,
+            contact_id=student.contact.id,
+            created_at=at,
+            updated_at=at,
+        )

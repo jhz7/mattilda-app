@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from src.shared.contact.model import Contact
@@ -27,11 +27,11 @@ class Student:
     first_name: str
     last_name: str
     age: int
-    contact: list[Contact]
+    contact: Contact
     identity: Identity
-    status: StudentStatus = StudentStatus.ACTIVE
     created_at: datetime
     updated_at: datetime
+    status: StudentStatus
 
     def deactivate(self, at: datetime = datetime.now()) -> "Student":
         if StudentStatus.ACTIVE != self.status:
@@ -42,10 +42,24 @@ class Student:
 
         return self
 
-
-@dataclass
-class NewStudent(Student):
-    id: str = field(init=False)
-    status: StudentStatus = field(init=False)
-    created_at: datetime = field(init=False)
-    updated_at: datetime = field(init=False)
+    @staticmethod
+    def of(
+        id: str,
+        first_name: str,
+        last_name: str,
+        age: int,
+        contact: Contact,
+        identity: Identity,
+        at: datetime = datetime.now(),
+    ) -> "Student":
+        return Student(
+            id=id,
+            first_name=first_name,
+            last_name=last_name,
+            age=age,
+            contact=contact,
+            identity=identity,
+            status=StudentStatus.ACTIVE,
+            created_at=at,
+            updated_at=at,
+        )

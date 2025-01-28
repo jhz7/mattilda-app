@@ -5,4 +5,9 @@ from src.shared.id.generator import IdGenerator
 
 class UlidIdGenerator(IdGenerator):
     async def generate(self) -> str:
-        str(ulid_monotonic.new())
+        ulid = ulid_monotonic.new()
+        return str(ulid)
+
+
+def get_id_generator() -> IdGenerator:
+    return UlidIdGenerator()

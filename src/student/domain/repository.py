@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 
 from src.shared.errors.application import NotFoundError
-from src.student.domain.model import Identity, NewStudent, Student
+from src.student.domain.model import Identity, Student, Student
 
 
 class Query(ABC):
@@ -41,9 +41,9 @@ class StudentRepository(ABC):
         pass
 
     @abstractmethod
-    async def add(self, student: NewStudent) -> Student:
+    async def add(self, student: Student) -> Student:
         pass
-    
+
     @abstractmethod
     async def update(self, student: Student) -> Student:
         pass

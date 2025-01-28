@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel, EmailStr, Field
@@ -9,7 +9,7 @@ from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 
 class ContactDto(BaseModel):
     email: EmailStr
-    phone: str = Field(..., regex=r"^\+?[1-9]\d{1,14}$")
+    phone: str = Field(..., pattern=r"^\+?[1-9]\d{1,14}$")
     address: Annotated[str, Field(min_length=5, max_length=255)]
 
 
@@ -40,10 +40,22 @@ class ContactDbo(BaseSqlModel):
         )
 
     @staticmethod
-    def from_domain(domain: Contact) -> "ContactDbo":
+    def from_domain(domain: Contact, at: datetime = datetime.now()) -> "ContactDbo":
         return ContactDbo(
             id=domain.id,
             email=domain.email,
             phone=domain.phone,
             address=domain.address,
+            created_at=at,
+            updated_at=at,
         )
+    
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "phone": self.phone,
+            "address": self.address,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }

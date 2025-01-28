@@ -1,35 +1,59 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.db.pg_sqlalchemy.connection import get_db
-from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
+from src.shared.id.generator import IdGenerator
+from src.shared.id.ulid_generator import get_id_generator
+from src.shared.contact.model import ContactDto
+from src.student.domain.repository import ById, StudentRepository
+from src.student.infrastructure.persistence.sqlalchemy.repository import (
+    get_student_repository,
+)
+from src.student.application.use_cases.register_student import RegisterStudent, Request
+from src.student.domain.model import Identity, IdentityKind
 
 
 router = APIRouter()
+
+
+def get_register_student_use_case(
+    id_generator: IdGenerator = Depends(get_id_generator),
+    student_repository: StudentRepository = Depends(get_student_repository),
+) -> RegisterStudent:
+    return RegisterStudent(
+        student_repository=student_repository, id_generator=id_generator
+    )
 
 
 class StudentDto(BaseModel):
     first_name: str
     last_name: str
     age: int
-    identity_kind: str
+    identity_kind: IdentityKind
     identity_code: str
+    contact: ContactDto
 
 
 @router.post("/students")
-async def create_student(request: StudentDto, db: AsyncSession = Depends(get_db)):
-    student_dbo = StudentDbo(
-        first_name=request.first_name,
-        last_name=request.last_name,
-        age=request.age,
-        identity_kind=request.identity_kind,
-        identity_code=request.identity_code,
-        status="active",
+async def create_student(
+    dto: StudentDto,
+    use_case: RegisterStudent = Depends(get_register_student_use_case),
+):
+    request = Request(
+        first_name=dto.first_name,
+        last_name=dto.last_name,
+        age=dto.age,
+        identity=Identity(kind=dto.identity_kind, code=dto.identity_code),
+        email=dto.contact.email,
+        phone=dto.contact.phone,
+        address=dto.contact.address,
     )
+    registered_student = await use_case.execute(request)
 
-    db.add(student_dbo)
-    await db.commit()
-    await db.refresh(student_dbo)
+    return registered_student
 
-    return student_dbo
+
+@router.get("/students")
+async def get_student(id, repo: StudentRepository = Depends(get_student_repository)):
+    student = await repo.get(query=ById(id=id))
+
+    return student
