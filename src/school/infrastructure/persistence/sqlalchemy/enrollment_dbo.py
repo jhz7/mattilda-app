@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import DECIMAL, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.school.domain.enrollment import Enrollment
+from src.school.domain.enrollment import ActiveEnrollmentProjection, Enrollment
 from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
@@ -44,6 +44,14 @@ class EnrollmentDbo(BaseSqlModel):
             deleted_at=self.deleted_at,
             created_at=self.created_at,
             updated_at=self.updated_at,
+        )
+
+    def as_read_projection(self) -> ActiveEnrollmentProjection:
+        return ActiveEnrollmentProjection(
+            id=self.id,
+            student_id=self.student_id,
+            school_id=self.school_id,
+            monthly_fee=self.monthly_fee,
         )
 
     def as_dict(self) -> dict:

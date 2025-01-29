@@ -1,5 +1,14 @@
 from fastapi import APIRouter, Depends
 
+from src.invoice.application.use_cases.create_invoice import CreateInvoice
+from src.invoice.domain.repository import InvoiceRepository
+from src.invoice.infrastructure.persistence.sqlalchemy.repository import (
+    get_invoice_repository,
+)
+from src.school.application.services.generate_invoices import (
+    GenerateInvoices,
+    Request as GenerateInvoicesRequest,
+)
 from src.school.application.use_cases.enroll_student_to_school import (
     EnrollStudentToSchool,
     Request as EnrollStudentToSchoolRequest,
@@ -26,6 +35,7 @@ from src.school.application.use_cases.update_school import (
     Request as UpdateSchoolRequest,
 )
 from src.school.infrastructure.api.http.dto import (
+    BillPeriodDto,
     CreateSchoolDto,
     EnrollStudentToSchoolDto,
     UpdateSchoolDto,
@@ -77,6 +87,30 @@ def get_enroll_student_to_school_use_case(
     )
 
 
+def get_create_invoice_use_case(
+    student_repository: StudentRepository = Depends(get_student_repository),
+    school_repository: SchoolRepository = Depends(get_school_repository),
+    invoice_repository: InvoiceRepository = Depends(get_invoice_repository),
+) -> CreateInvoice:
+    return CreateInvoice(
+        students=student_repository,
+        schools=school_repository,
+        invoices=invoice_repository,
+    )
+
+
+def get_generate_invoices_service(
+    schools_repository: SchoolRepository = Depends(get_school_repository),
+    enrollment_repository: EnrollmentRepository = Depends(get_enrollment_repository),
+    create_invoice: CreateInvoice = Depends(get_create_invoice_use_case),
+) -> GenerateInvoices:
+    return GenerateInvoices(
+        schools=schools_repository,
+        enrollments=enrollment_repository,
+        create_invoice=create_invoice,
+    )
+
+
 @router.post("/schools")
 async def create_school(
     dto: CreateSchoolDto,
@@ -109,6 +143,22 @@ async def create_enrollment(
     enrollment = await use_case.execute(request)
 
     return enrollment
+
+
+@router.post("/schools/{id}/invoices/")
+async def create_invoices(
+    id: str,
+    dto: BillPeriodDto,
+    use_case: GenerateInvoices = Depends(get_generate_invoices_service),
+):
+    request = GenerateInvoicesRequest(
+        school_id=id,
+        period=dto.period,
+    )
+
+    await use_case.execute(request)
+
+    return None
 
 
 @router.delete("/schools/{id}")

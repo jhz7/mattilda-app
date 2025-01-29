@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from pydantic import BaseModel
 
@@ -17,3 +18,7 @@ class UpdateSchoolDto(BaseModel):
 class EnrollStudentToSchoolDto(BaseModel):
     student_id: str
     monthly_fee: Decimal
+
+
+class BillPeriodDto(BaseModel):
+    period: date

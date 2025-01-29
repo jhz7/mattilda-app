@@ -77,6 +77,14 @@ class Enrollment:
         return self.deleted_at is None
 
 
+@dataclass(frozen=True)
+class ActiveEnrollmentProjection:
+    id: str
+    student_id: str
+    school_id: str
+    monthly_fee: Decimal
+
+
 class EnrollmentRepository(ABC):
     async def get(self, school_id: str, student_id: str) -> Enrollment:
         found_enrollment = await self.find(school_id=school_id, student_id=student_id)
@@ -92,13 +100,19 @@ class EnrollmentRepository(ABC):
     @abstractmethod
     async def exists(self, school_id: str, student_id: str) -> bool:
         pass
-    
+
     @abstractmethod
     async def find(self, school_id: str, student_id: str) -> Enrollment:
         pass
 
     @abstractmethod
     async def list_ids(self, school_id: str) -> list[str]:
+        pass
+
+    @abstractmethod
+    async def list_active(
+        self, school_id: str, cursor: str | None
+    ) -> tuple[str, list[ActiveEnrollmentProjection]]:
         pass
 
     @abstractmethod

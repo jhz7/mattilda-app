@@ -7,7 +7,11 @@ from sqlalchemy.dialects.postgresql import insert
 from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import (
     EnrollmentDbo,
 )
-from src.school.domain.enrollment import Enrollment, EnrollmentRepository
+from src.school.domain.enrollment import (
+    ActiveEnrollmentProjection,
+    Enrollment,
+    EnrollmentRepository,
+)
 from src.shared.db.pg_sqlalchemy.connection import get_db
 from src.shared.logging.log import Logger
 from src.shared.errors.technical import TechnicalError
@@ -63,6 +67,37 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
             logger.error(error)
 
             raise error from e
+
+    async def list_active(
+        self, school_id: str, cursor: str | None
+    ) -> tuple[str, list[ActiveEnrollmentProjection]]:
+        with_cursor = (
+            select(EnrollmentDbo)
+            .filter(
+                EnrollmentDbo.school_id == school_id,
+                EnrollmentDbo.deleted_at.is_(None),
+                EnrollmentDbo.id > cursor,
+            )
+            .order_by(EnrollmentDbo.id)
+            .limit(50)
+        )
+        without_cursor = (
+            select(EnrollmentDbo)
+            .filter(
+                EnrollmentDbo.school_id == school_id,
+                EnrollmentDbo.deleted_at.is_(None),
+            )
+            .order_by(EnrollmentDbo.id)
+            .limit(50)
+        )
+
+        db_query = without_cursor if not cursor else with_cursor
+
+        result = await self.session.execute(db_query)
+        result = result.scalars().all()
+        next_cursor = result[-1].id if result else None
+
+        return next_cursor, [dbo.as_read_projection() for dbo in result]
 
     async def list_ids(self, school_id: str) -> list[str]:
         try:
