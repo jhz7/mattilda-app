@@ -68,8 +68,14 @@ The base supported operations to get a working solution are:
 
 With service running, visit the [API documentation](http://localhost:8000/docs#/) for more details and supported operations.
 
+### Running tests
+```bash
+pytest test
+```
+
 ### Proposed enhacements
 
+- Enrich automated tests
 - Build a full featured UI for the app.
 - Leverage on cache for read operations.
 - Leverage fully on event driven architecture already mounted.
