@@ -36,9 +36,12 @@ if config.config_file_name is not None:
 from src.shared.db.pg_sqlalchemy.connection import BaseSqlModel
 from src.shared.contact.model import ContactDbo
 from src.school.infrastructure.persistence.sqlalchemy.dbo import SchoolDbo
-from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import EnrollmentDbo
+from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import (
+    EnrollmentDbo,
+)
 from src.student.infrastructure.persistence.sqlalchemy.dbo import StudentDbo
 from src.invoice.infrastructure.persistence.sqlalchemy.dbo import PaymentDbo, InvoiceDbo
+from src.shared.job.persistence.sqlalchemy.dbo import JobExecutionDbo
 
 target_metadata = BaseSqlModel.metadata
 

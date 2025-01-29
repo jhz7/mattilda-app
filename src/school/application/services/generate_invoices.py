@@ -1,7 +1,9 @@
 from typing import AsyncGenerator
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
+from src.shared.job.model import JobItemResult, StartedJobItem
+from src.shared.job.executor import JobExecutor
 from src.invoice.application.use_cases.create_invoice import (
     CreateInvoice,
     Request as CreateInvoiceRequest,
@@ -30,10 +32,12 @@ class GenerateInvoices:
         schools: SchoolRepository,
         enrollments: EnrollmentRepository,
         create_invoice: CreateInvoice,
+        job_executor: JobExecutor,
     ):
         self.schools = schools
         self.enrollments = enrollments
         self.create_invoice = create_invoice
+        self.job_executor = job_executor
 
     async def execute(self, request: Request) -> Enrollment:
         logger.info(
@@ -50,34 +54,47 @@ class GenerateInvoices:
 
             raise error
 
-        async for _, enrollments in self.list_active_enrollments(school_id=school.id):
-            for enrollment in enrollments:
-                await self.__generate_invoice(enrollment, request.period)
-
-    async def __generate_invoice(
-        self, enrollment: ActiveEnrollmentProjection, period: date
-    ):
-        create_invoice_request = CreateInvoiceRequest(
-            school_id=enrollment.school_id,
-            student_id=enrollment.student_id,
-            amount=enrollment.monthly_fee,
-            period=period,
+        await self.job_executor.run(
+            job_id=f"generate-invoices|school:{request.school_id}|period:{request.period}",
+            job_name="GenerateInvoices",
+            generator=self.__generate_invoices(request),
         )
-        await self.create_invoice.execute(request=create_invoice_request)
 
-    async def list_active_enrollments(
-        self, school_id: str
-    ) -> AsyncGenerator[tuple[str, list[ActiveEnrollmentProjection]], None]:
+    async def __generate_invoices(
+        self, request: Request
+    ) -> AsyncGenerator[JobItemResult, None]:
         cursor = None
 
         while True:
             next_cursor, enrollments = await self.enrollments.list_active(
-                school_id=school_id, cursor=cursor
+                school_id=request.school_id, cursor=cursor
             )
 
-            yield next_cursor, enrollments
+            for enrollment in enrollments:
+                yield await self.__generate_invoice(enrollment, request.period)
 
             if not next_cursor:
                 break
 
             cursor = next_cursor
+
+    async def __generate_invoice(
+        self, enrollment: ActiveEnrollmentProjection, period: date
+    ) -> JobItemResult:
+        started_job_item = StartedJobItem(
+            id=f"erollment:{enrollment.id}|period:{period}",
+            started_at=datetime.now(),
+        )
+
+        try:
+            create_invoice_request = CreateInvoiceRequest(
+                school_id=enrollment.school_id,
+                student_id=enrollment.student_id,
+                amount=enrollment.monthly_fee,
+                due_date=period,
+            )
+            await self.create_invoice.execute(request=create_invoice_request)
+
+            return started_job_item.succeeded(finished_at=datetime.now())
+        except Exception as error:
+            return started_job_item.failed(finished_at=datetime.now(), error=str(error))

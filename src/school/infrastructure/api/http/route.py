@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends
 
+from src.shared.job.executor import JobExecutor
+from src.shared.job.persistence.sqlalchemy.job_repository import get_job_repository
+from src.shared.job.repository import JobRepository
 from src.invoice.application.use_cases.create_invoice import CreateInvoice
 from src.invoice.domain.repository import InvoiceRepository
 from src.invoice.infrastructure.persistence.sqlalchemy.repository import (
@@ -99,15 +102,23 @@ def get_create_invoice_use_case(
     )
 
 
+def get_job_executor(
+    jobs: JobRepository = Depends(get_job_repository),
+) -> JobExecutor:
+    return JobExecutor(jobs=jobs)
+
+
 def get_generate_invoices_service(
     schools_repository: SchoolRepository = Depends(get_school_repository),
     enrollment_repository: EnrollmentRepository = Depends(get_enrollment_repository),
     create_invoice: CreateInvoice = Depends(get_create_invoice_use_case),
+    job_executor: JobExecutor = Depends(get_job_executor),
 ) -> GenerateInvoices:
     return GenerateInvoices(
         schools=schools_repository,
         enrollments=enrollment_repository,
         create_invoice=create_invoice,
+        job_executor=job_executor,
     )
 
 

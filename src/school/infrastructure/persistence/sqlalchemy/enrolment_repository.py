@@ -71,27 +71,30 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
     async def list_active(
         self, school_id: str, cursor: str | None
     ) -> tuple[str, list[ActiveEnrollmentProjection]]:
-        with_cursor = (
-            select(EnrollmentDbo)
-            .filter(
-                EnrollmentDbo.school_id == school_id,
-                EnrollmentDbo.deleted_at.is_(None),
-                EnrollmentDbo.id > cursor,
+        def with_cursor():
+            return (
+                select(EnrollmentDbo)
+                .filter(
+                    EnrollmentDbo.school_id == school_id,
+                    EnrollmentDbo.deleted_at.is_(None),
+                    EnrollmentDbo.id > cursor,
+                )
+                .order_by(EnrollmentDbo.id)
+                .limit(50)
             )
-            .order_by(EnrollmentDbo.id)
-            .limit(50)
-        )
-        without_cursor = (
-            select(EnrollmentDbo)
-            .filter(
-                EnrollmentDbo.school_id == school_id,
-                EnrollmentDbo.deleted_at.is_(None),
-            )
-            .order_by(EnrollmentDbo.id)
-            .limit(50)
-        )
 
-        db_query = without_cursor if not cursor else with_cursor
+        def without_cursor():
+            return (
+                select(EnrollmentDbo)
+                .filter(
+                    EnrollmentDbo.school_id == school_id,
+                    EnrollmentDbo.deleted_at.is_(None),
+                )
+                .order_by(EnrollmentDbo.id)
+                .limit(50)
+            )
+
+        db_query = without_cursor() if not cursor else with_cursor()
 
         result = await self.session.execute(db_query)
         result = result.scalars().all()
