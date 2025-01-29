@@ -71,6 +71,8 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
     async def list_active(
         self, school_id: str, cursor: str | None
     ) -> tuple[str, list[ActiveEnrollmentProjection]]:
+        page_size = 50
+
         def with_cursor():
             return (
                 select(EnrollmentDbo)
@@ -80,7 +82,7 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
                     EnrollmentDbo.id > cursor,
                 )
                 .order_by(EnrollmentDbo.id)
-                .limit(50)
+                .limit(page_size)
             )
 
         def without_cursor():
@@ -91,37 +93,17 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
                     EnrollmentDbo.deleted_at.is_(None),
                 )
                 .order_by(EnrollmentDbo.id)
-                .limit(50)
+                .limit(page_size)
             )
 
         db_query = without_cursor() if not cursor else with_cursor()
 
         result = await self.session.execute(db_query)
         result = result.scalars().all()
-        next_cursor = result[-1].id if result else None
+
+        next_cursor = result[-1].id if result and len(result) == page_size else None
 
         return next_cursor, [dbo.as_read_projection() for dbo in result]
-
-    async def list_ids(self, school_id: str) -> list[str]:
-        try:
-            db_query = select(EnrollmentDbo.id).filter(
-                EnrollmentDbo.school_id == school_id, EnrollmentDbo.deleted_at.is_(None)
-            )
-            result = await self.session.execute(db_query)
-            result = result.scalars().all()
-
-            return list(result)
-        except Exception as e:
-            error = TechnicalError(
-                code="EnrollmentRepositoryError",
-                message=f"Fail listing schools/students enrollments school_id={school_id}",
-                attributes={"school_id": school_id},
-                cause=e,
-            )
-
-            logger.error(error)
-
-            raise error from e
 
     async def save(self, school: Enrollment) -> Enrollment:
         try:

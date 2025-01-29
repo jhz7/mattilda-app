@@ -106,10 +106,6 @@ class EnrollmentRepository(ABC):
         pass
 
     @abstractmethod
-    async def list_ids(self, school_id: str) -> list[str]:
-        pass
-
-    @abstractmethod
     async def list_active(
         self, school_id: str, cursor: str | None
     ) -> tuple[str, list[ActiveEnrollmentProjection]]:
