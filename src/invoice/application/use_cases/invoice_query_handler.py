@@ -17,8 +17,5 @@ class InvoiceQueryHandler:
     async def find(self, query: InvoiceQuery) -> Invoice | None:
         return await self.invoices.find(query=query)
 
-    async def list(self, query: InvoicesQuery) -> list[Invoice]:
-        return await self.invoices.list(query)
-
     async def account_statement(self, query: InvoicesQuery) -> AccountStatement:
         return await self.invoices.account_statement(query)

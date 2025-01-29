@@ -77,10 +77,6 @@ class InvoiceRepository(ABC):
         pass
 
     @abstractmethod
-    async def list(self, query: InvoicesQuery) -> list[Invoice]:
-        pass
-
-    @abstractmethod
     async def account_statement(self, query: InvoicesQuery) -> AccountStatement:
         pass
 

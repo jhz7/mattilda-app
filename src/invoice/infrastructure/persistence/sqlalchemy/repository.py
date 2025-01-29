@@ -110,27 +110,6 @@ class SqlAlchemyInvoiceRepository(InvoiceRepository):
 
             raise error from e
 
-    async def list(self, query: InvoicesQuery) -> list[Invoice]:
-        try:
-            db_query = select(InvoiceDbo).where(self.__parse_multiple_query(query))
-            result = await self.session.execute(
-                db_query.order_by(InvoiceDbo.created_at.desc())
-            )
-            result = result.scalars().all()
-
-            return list(map(lambda dbo: dbo.as_domain(), result))
-        except Exception as e:
-            error = TechnicalError(
-                code="InvoiceRepositoryError",
-                message=f"Fail listing invoices query={(str(query))}",
-                attributes=asdict(query),
-                cause=e,
-            )
-
-            logger.error(error)
-
-            raise error from e
-
     async def update(self, event: InvoiceEvent) -> None:
         try:
             match event:
