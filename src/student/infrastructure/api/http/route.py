@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from src.shared.pubsub.impl.redis_publisher import create_publisher
+from src.shared.pubsub.publisher import Publisher
 from src.shared.id.generator import IdGenerator
 from src.shared.id.ulid_generator import get_id_generator
 from src.student.domain.repository import ById, StudentRepository
@@ -32,8 +34,9 @@ def get_register_student_use_case(
 
 def get_drop_student_use_case(
     student_repository: StudentRepository = Depends(get_student_repository),
+    publisher: Publisher = Depends(create_publisher),
 ) -> RegisterStudent:
-    return DropStudent(students=student_repository)
+    return DropStudent(students=student_repository, publisher=publisher)
 
 
 def get_update_student_use_case(

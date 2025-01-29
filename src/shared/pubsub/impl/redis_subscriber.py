@@ -36,3 +36,7 @@ class RedisSubscriber(Subscriber):
             logger.error(error)
 
             raise error from e
+
+
+def create_subscriber() -> Subscriber:
+    return RedisSubscriber()

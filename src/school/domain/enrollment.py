@@ -85,6 +85,20 @@ class ActiveEnrollmentProjection:
     monthly_fee: Decimal
 
 
+class EnrollmentsQuery(ABC):
+    pass
+
+
+@dataclass
+class ByStudentId(EnrollmentsQuery):
+    student_id: str
+
+
+@dataclass
+class BySchoolId(EnrollmentsQuery):
+    school_id: str
+
+
 class EnrollmentRepository(ABC):
     async def get(self, school_id: str, student_id: str) -> Enrollment:
         found_enrollment = await self.find(school_id=school_id, student_id=student_id)
@@ -107,7 +121,7 @@ class EnrollmentRepository(ABC):
 
     @abstractmethod
     async def list_active(
-        self, school_id: str, cursor: str | None
+        self, query: EnrollmentsQuery, cursor: str | None
     ) -> tuple[str, list[ActiveEnrollmentProjection]]:
         pass
 

@@ -32,7 +32,7 @@ class JobExecutor:
             )
 
         except Exception as error:
-            logger.error(f"Error running job: {job_name} {str(error)}", {"error": str(error)})
+            logger.error(f"Error running job: {job_name}", {"error": str(error)})
 
             job_execution_result = started_job.failed(
                 finished_at=datetime.now(), error=str(error)

@@ -9,6 +9,9 @@ from src.school.infrastructure.persistence.sqlalchemy.enrollment_dbo import (
 )
 from src.school.domain.enrollment import (
     ActiveEnrollmentProjection,
+    BySchoolId,
+    ByStudentId,
+    EnrollmentsQuery,
     Enrollment,
     EnrollmentRepository,
 )
@@ -69,7 +72,7 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
             raise error from e
 
     async def list_active(
-        self, school_id: str, cursor: str | None
+        self, query: EnrollmentsQuery, cursor: str | None
     ) -> tuple[str, list[ActiveEnrollmentProjection]]:
         page_size = 50
 
@@ -77,7 +80,7 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
             return (
                 select(EnrollmentDbo)
                 .filter(
-                    EnrollmentDbo.school_id == school_id,
+                    self.__parse_query(query),
                     EnrollmentDbo.deleted_at.is_(None),
                     EnrollmentDbo.id > cursor,
                 )
@@ -89,7 +92,7 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
             return (
                 select(EnrollmentDbo)
                 .filter(
-                    EnrollmentDbo.school_id == school_id,
+                    self.__parse_query(query),
                     EnrollmentDbo.deleted_at.is_(None),
                 )
                 .order_by(EnrollmentDbo.id)
@@ -133,6 +136,15 @@ class SqlAlchemyEnrollmentRepository(EnrollmentRepository):
             logger.error(error)
 
             raise error from e
+
+    def __parse_query(self, query: EnrollmentsQuery):
+        match query:
+            case ByStudentId(student_id):
+                return EnrollmentDbo.student_id == student_id
+            case BySchoolId(school_id):
+                return EnrollmentDbo.school_id == school_id
+            case _:
+                raise ValueError(f"Invalid query {query}")
 
 
 def get_enrollment_repository(

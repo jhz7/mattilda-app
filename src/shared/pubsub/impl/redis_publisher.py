@@ -30,3 +30,6 @@ class RedisPublisher(Publisher):
             logger.error(error)
 
             raise error from e
+
+def create_publisher() -> Publisher:
+    return RedisPublisher()

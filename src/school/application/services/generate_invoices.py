@@ -11,6 +11,7 @@ from src.invoice.application.use_cases.create_invoice import (
 from src.school.domain.errors import InvalidSchoolStatusError
 from src.school.domain.enrollment import (
     ActiveEnrollmentProjection,
+    BySchoolId,
     Enrollment,
     EnrollmentRepository,
 )
@@ -67,7 +68,7 @@ class GenerateInvoices:
 
         while True:
             next_cursor, enrollments = await self.enrollments.list_active(
-                school_id=request.school_id, cursor=cursor
+                query=BySchoolId(request.school_id), cursor=cursor
             )
 
             for enrollment in enrollments:

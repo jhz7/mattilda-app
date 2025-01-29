@@ -2,6 +2,7 @@ from src.school.domain.enrollment import (
     ActiveEnrollmentProjection,
     Enrollment,
     EnrollmentRepository,
+    EnrollmentsQuery,
 )
 
 
@@ -16,8 +17,6 @@ class EnrollmentQueryHandler:
         return await self.enrollments.find(student_id=student_id, school_id=school_id)
 
     async def list(
-        self, school_id: str, next_cursor: str | None
+        self, query: EnrollmentsQuery, next_cursor: str | None
     ) -> tuple[str | None, list[ActiveEnrollmentProjection]]:
-        return await self.enrollments.list_active(
-            school_id=school_id, cursor=next_cursor
-        )
+        return await self.enrollments.list_active(query=query, cursor=next_cursor)

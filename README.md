@@ -23,10 +23,11 @@ There are four modules in the project:
 
 ### Running
 
-- The development environment leverages on docker compose to run two containers:
+- The development environment leverages on docker compose to run three containers:
 
   1. A Postgres DB
-  2. The apprication server
+  2. A Redis pubsub and cache server
+  3. The application server
 
 - Open a terminal in the `deployment` folder and execute
 
@@ -70,5 +71,6 @@ With service running, visit the [API documentation](http://localhost:8000/docs#/
 ### Proposed enhacements
 
 - Build a full featured UI for the app.
-- Add event driven process to make state consistent eg the enrollment of a student in a school when the student and/or the school have been deleted.
+- Leverage on cache for read operations.
+- Leverage fully on event driven architecture already mounted.
 - Notifications to parties. Collections Notifications, etc.
