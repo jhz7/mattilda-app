@@ -37,7 +37,7 @@ class StudentRepository(ABC):
         pass
 
     @abstractmethod
-    async def list(self) -> list[Student]:
+    async def list(self, next_cursor: str | None) -> tuple[str | None, list[Student]]:
         pass
 
     @abstractmethod

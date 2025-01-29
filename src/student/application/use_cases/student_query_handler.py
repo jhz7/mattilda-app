@@ -12,5 +12,5 @@ class StudentQueryHandler:
     async def find(self, query: Query) -> Student | None:
         return await self.students.find(query=query)
 
-    async def list(self) -> list[Student]:
-        return await self.students.list()
+    async def list(self, next_cursor: str | None) -> tuple[str | None, list[Student]]:
+        return await self.students.list(next_cursor=next_cursor)

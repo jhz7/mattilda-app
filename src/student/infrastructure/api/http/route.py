@@ -106,15 +106,16 @@ async def get_student(
     id: str,
     query_handler: StudentQueryHandler = Depends(get_student_query_handler),
 ):
-    student = await query_handler.get(query=ById(id=id))
+    student = await query_handler.find(query=ById(id=id))
 
     return student
 
 
 @router.get("/students")
 async def get_students(
+    next_cursor: str | None = None,
     query_handler: StudentQueryHandler = Depends(get_student_query_handler),
 ):
-    students = await query_handler.list()
+    updated_cursor, students = await query_handler.list(next_cursor=next_cursor)
 
-    return students
+    return {"students": students, "next_cursor": updated_cursor}

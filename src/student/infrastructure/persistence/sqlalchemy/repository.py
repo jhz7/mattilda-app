@@ -57,12 +57,31 @@ class SqlAlchemyStudentRepository(StudentRepository):
 
             raise error from e
 
-    async def list(self) -> list[Student]:
+    async def list(self, next_cursor: str | None) -> tuple[str | None, list[Student]]:
         try:
-            result = await self.session.execute(select(StudentDbo))
+            page_size = 20
+
+            def with_cursor():
+                return (
+                    select(StudentDbo)
+                    .filter(StudentDbo.id > next_cursor)
+                    .order_by(StudentDbo.id)
+                    .limit(page_size)
+                )
+
+            def without_cursor():
+                return select(StudentDbo).order_by(StudentDbo.id).limit(page_size)
+
+            db_query = without_cursor() if not next_cursor else with_cursor()
+
+            result = await self.session.execute(db_query)
             result = result.scalars().all()
 
-            return list(map(lambda student_dbo: student_dbo.as_domain(), result))
+            next_cursor = result[-1].id if result and len(result) == page_size else None
+
+            return next_cursor, list(
+                map(lambda student_dbo: student_dbo.as_domain(), result)
+            )
         except Exception as e:
             error = TechnicalError(
                 code="StudentRepositoryError",
